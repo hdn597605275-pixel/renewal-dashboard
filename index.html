@@ -559,15 +559,6 @@ const EMP_NAMES = Object.keys(EMP_DATA);
 function generateMembersFor(empName) {
   const key = `_members_${empName}`;
 
-  // Check for admin-imported data first
-  const imported = JSON.parse(localStorage.getItem(key));
-  if (imported && imported.length > 0) {
-    // Check if it's already in the new format (with .renewed field)
-    if (imported[0].renewed !== undefined) return imported;
-    // Convert old format if needed
-    return imported;
-  }
-
   const real = REAL_MEMBERS[empName] || [];
   if (real.length > 0) {
     const members = real.map(item => ({
@@ -1000,13 +991,6 @@ function renderR280Dashboard(name) {
 
 function getR280Members(name) {
   const key = `_r280_${name}`;
-
-  // Check for admin-imported data first
-  const imported = JSON.parse(localStorage.getItem(key));
-  if (imported && imported.length > 0) {
-    if (imported[0].renewed !== undefined) return imported;
-    return imported;
-  }
 
   const real = REAL_MEMBERS_280[name] || [];
   const members = real.map(item => ({
@@ -1803,7 +1787,7 @@ function exportMyData() {
 document.addEventListener('DOMContentLoaded', function() {
   // Clear stale localStorage from old versions
   // Force clear old cache on version change
-  const VERSION = 'v3';
+  const VERSION = 'v4';
   if (localStorage.getItem('_data_version') !== VERSION) {
     localStorage.clear();
     localStorage.setItem('_data_version', VERSION);
