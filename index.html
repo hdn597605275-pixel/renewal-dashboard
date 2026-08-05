@@ -447,6 +447,7 @@
     </div>
   </div>
 </div>
+</div>
 
 <!-- ============ 管理者总览 ============ -->
 <div id="mgrPage" class="hidden">
@@ -464,7 +465,7 @@
       <h3 class="font-semibold text-sm">🎯 8月续费目标达成</h3>
       <span class="text-xs text-[#6b7a8f]">目标续费率 70%</span>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3">
       <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
         <div class="text-[10px] text-[#6b7a8f]">8月待续费</div>
         <div class="text-xl font-bold text-blue-600" id="mgrAugTotal">--</div>
@@ -480,6 +481,10 @@
       <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
         <div class="text-[10px] text-[#6b7a8f]">还差(户)</div>
         <div class="text-xl font-bold text-amber-600" id="mgrAugGap">--</div>
+      </div>
+      <div class="bg-red-50 rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">💰 还差金额</div>
+        <div class="text-xl font-bold text-red-600" id="mgrAugGapAmount">--</div>
       </div>
     </div>
     <div class="table-wrap">
@@ -510,7 +515,7 @@
         <option value="renewed">按续费数</option>
         <option value="pending">按待续费</option>
       </select>
-      <canvas id="mgrRankChart" height="200"></canvas>
+      <div id="mgrRankList" class="space-y-2"></div>
     </div>
 
     <!-- 风险预警 -->
@@ -531,8 +536,11 @@
         </div>
       </div>
       <div class="flex items-center justify-between mb-2">
-        <h4 class="text-xs font-semibold">待续费 TOP 机构（按户数）</h4>
-        <span class="text-[10px] text-[#6b7a8f]">风险机构</span>
+        <h4 class="text-xs font-semibold">待续费 TOP 机构</h4>
+        <select id="mgrRiskSort" class="text-[10px] border border-[#e8edf2] rounded px-1.5 py-0.5" onchange="renderRiskWarning()">
+          <option value="count">按户数</option>
+          <option value="amount">按金额</option>
+        </select>
       </div>
       <div class="table-wrap">
         <table>
@@ -550,10 +558,54 @@
     </div>
   </div>
 
+  <!-- 未来3个月到期压力 -->
+  <div class="card p-4 mb-4">
+    <h3 class="font-semibold text-sm mb-3">📅 未来3个月到期压力</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3" id="mgrPressureCards"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="text-[10px] px-2 py-1.5">员工</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">9月待续</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">9月金额</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">10月待续</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">10月金额</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">11月待续</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">11月金额</th>
+            <th class="text-[10px] px-2 py-1.5 text-center border-l-2 border-[#e8edf2]">3个月合计</th>
+          </tr>
+        </thead>
+        <tbody id="mgrPressureBody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- 月度续费率趋势 -->
   <div class="card p-4">
     <h3 class="font-semibold text-sm mb-3">月度续费率趋势</h3>
-    <canvas id="mgrTrendChart" height="150"></canvas>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="text-[10px] px-2 py-1.5">员工</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">1月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">2月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">3月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">4月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">5月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">6月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">7月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">8月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">9月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">10月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">11月</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">12月</th>
+          </tr>
+        </thead>
+        <tbody id="mgrTrendBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -1752,10 +1804,16 @@ const AUG_TARGETS = {
 };
 
 function renderManagerDashboard() {
-  renderAugTarget();
-  renderRiskWarning();
-  renderMgrRank();
-  renderMgrTrend();
+  try {
+    renderAugTarget();
+    renderRiskWarning();
+    renderPressure();
+    renderMgrRank();
+    renderMgrTrend();
+  } catch(e) {
+    console.error('管理者总览错误:', e);
+    document.getElementById('mgrAugBody').innerHTML = '<tr><td colspan="8" class="text-red-500 text-xs p-4">加载出错: ' + e.message + '</td></tr>';
+  }
 }
 
 // ============ 8月目标达成 ============
@@ -1789,6 +1847,7 @@ function renderAugTarget() {
   document.getElementById('mgrAugRate').textContent = (overallRate*100).toFixed(1) + '%';
   document.getElementById('mgrAugRate').className = 'text-xl font-bold ' + (overallRate >= 0.7 ? 'text-green-600' : overallRate >= 0.56 ? 'text-amber-600' : 'text-red-500');
   document.getElementById('mgrAugGap').textContent = Math.ceil(gap);
+  document.getElementById('mgrAugGapAmount').textContent = '¥' + gapAmount.toLocaleString();
 }
 
 // ============ 风险预警 ============
@@ -1821,86 +1880,122 @@ function renderRiskWarning() {
   document.getElementById('mgrRisk7d').textContent = due7d;
   document.getElementById('mgrRisk30d').textContent = due30d;
 
-  // 待续费 TOP 机构（按户数）
-  const topOrgs = Object.entries(orgStats).sort((a, b) => b[1].count - a[1].count).slice(0, 8);
+  // 待续费 TOP 机构（按户数/金额排序切换）
+  const sortMode = document.getElementById('mgrRiskSort').value;
+  const topOrgs = Object.entries(orgStats).sort((a, b) =>
+    sortMode === 'amount' ? b[1].amount - a[1].amount : b[1].count - a[1].count
+  ).slice(0, 8);
   const tbody = document.getElementById('mgrRiskOrgBody');
   tbody.innerHTML = topOrgs.map(([name, s]) => `<tr>
     <td class="font-medium text-[11px] px-2 py-1.5" title="${name}">${name.length > 12 ? name.slice(0,12) + '…' : name}</td>
     <td class="text-center text-[11px] px-2 py-1.5 text-amber-600 font-bold">${s.count}</td>
-    <td class="text-center text-[11px] px-2 py-1.5">¥${s.amount.toLocaleString()}</td>
+    <td class="text-center text-[11px] px-2 py-1.5 font-bold ${s.amount >= 100000 ? 'text-red-600' : 'text-[#6b7a8f]'}">¥${s.amount.toLocaleString()}</td>
     <td class="text-center text-[11px] px-2 py-1.5 text-[#6b7a8f]">${s.emp}</td>
   </tr>`).join('');
 }
 
+// ============ 未来3个月到期压力 ============
+function renderPressure() {
+  const now = new Date();
+  // 计算9、10、11月
+  const months = [9, 10, 11];
+  const empRows = EMP_NAMES.map(n => {
+    const members = getMembersFor(n);
+    const row = { name: n, data: { 9: { count: 0, amount: 0 }, 10: { count: 0, amount: 0 }, 11: { count: 0, amount: 0 } } };
+    members.forEach(m => {
+      if (m.renewed) return;
+      const em = parseInt(m.expiry.slice(5, 7));
+      if (months.includes(em)) {
+        row.data[em].count++;
+        row.data[em].amount += m.price;
+      }
+    });
+    return row;
+  });
+
+  // 汇总卡片
+  const totals = { 9: { count: 0, amount: 0 }, 10: { count: 0, amount: 0 }, 11: { count: 0, amount: 0 } };
+  empRows.forEach(r => months.forEach(m => {
+    totals[m].count += r.data[m].count;
+    totals[m].amount += r.data[m].amount;
+  }));
+
+  document.getElementById('mgrPressureCards').innerHTML = months.map(m => {
+    const t = totals[m];
+    return `<div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+      <div class="text-xs font-semibold text-[#6b7a8f]">${m}月到期</div>
+      <div class="text-lg font-bold text-blue-600 mt-1">${t.count} 户</div>
+      <div class="text-[10px] text-amber-600">¥${t.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+
+  const tbody = document.getElementById('mgrPressureBody');
+  tbody.innerHTML = empRows.map(r => {
+    const cells = months.map(m => `<td class="text-center text-[11px] px-2 py-1.5">
+      <span class="font-bold ${r.data[m].count > 200 ? 'text-red-600' : r.data[m].count > 100 ? 'text-amber-600' : 'text-[#6b7a8f]'}">${r.data[m].count}</span>
+      <span class="text-[9px] text-[#94a3b8]">户</span><br>
+      <span class="text-[9px]">¥${r.data[m].amount.toLocaleString()}</span>
+    </td>`).join('');
+    const total = months.reduce((s, m) => s + r.data[m].count, 0);
+    return `<tr>
+      <td class="font-medium text-[11px] px-2 py-1.5">${r.name}</td>
+      ${cells}
+      <td class="text-center text-[11px] px-2 py-1.5 font-bold border-l-2 border-[#e8edf2]">${total}</td>
+    </tr>`;
+  }).join('');
+}
+
 function renderMgrRank() {
   const metric = document.getElementById('mgrRankMetric').value;
-  const ctx = document.getElementById('mgrRankChart').getContext('2d');
 
   let items = EMP_NAMES.map(n => ({ name: n, ...EMP_DATA[n] }));
   if (metric === 'rate') items.sort((a, b) => b.rate - a.rate);
   else if (metric === 'renewed') items.sort((a, b) => b.renewed - a.renewed);
   else items.sort((a, b) => b.pending - a.pending);
 
-  const labels = items.map(i => i.name);
-  const values = items.map(i => metric === 'rate' ? +(i.rate * 100).toFixed(1) : metric === 'renewed' ? i.renewed : i.pending);
-  const labelText = metric === 'rate' ? '续费率 (%)' : metric === 'renewed' ? '已续费数' : '待续费数';
-  const colors = items.map(i => i.color);
-
-  if (mgrRankChart) mgrRankChart.destroy();
-  mgrRankChart = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ label: labelText, data: values, backgroundColor: colors, borderRadius: 4, borderSkipped: false }] },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        y: { ticks: { font: { size: 9 } }, grid: { display: false } }
-      },
-    }
-  });
+  const container = document.getElementById('mgrRankList');
+  const rankIcons = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+  container.innerHTML = items.map((i, idx) => {
+    const pct = (i.rate * 100).toFixed(1);
+    const rateColor = i.rate >= 0.7 ? 'text-green-600' : i.rate >= 0.5 ? 'text-amber-600' : 'text-red-500';
+    const barColor = i.rate >= 0.7 ? '#16a34a' : i.rate >= 0.5 ? '#f59e0b' : '#ef4444';
+    const sub = metric === 'rate'
+      ? `${i.renewed}/${i.total} 已续 · 待续 ${i.pending}`
+      : metric === 'renewed'
+        ? `续费率 ${pct}% · 待续 ${i.pending}`
+        : `续费率 ${pct}% · 已续 ${i.renewed}`;
+    return `<div class="bg-[#f8fafc] rounded-lg p-2.5 border border-[#e8edf2]">
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-2">
+          <span>${rankIcons[idx]}</span>
+          <span class="font-medium text-xs">${i.name}</span>
+        </div>
+        <span class="text-sm font-bold ${rateColor}">${metric === 'rate' ? pct + '%' : i[metric]}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="progress-bar flex-1"><div class="progress-fill" style="width:${Math.min(i.rate*100,100)}%;background:${barColor}"></div></div>
+        <span class="text-[10px] text-[#6b7a8f] whitespace-nowrap">${sub}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderMgrTrend() {
-  const ctx = document.getElementById('mgrTrendChart').getContext('2d');
-  if (mgrTrendChart) mgrTrendChart.destroy();
-
-  const datasets = EMP_NAMES.map(n => {
+  const tbody = document.getElementById('mgrTrendBody');
+  tbody.innerHTML = EMP_NAMES.map(n => {
     const d = EMP_DATA[n];
-    return {
-      label: n,
-      data: MONTHS.map(m => d.monthly[m] ? +(d.monthly[m].r * 100).toFixed(1) : null),
-      borderColor: d.color,
-      backgroundColor: 'transparent',
-      tension: 0.3,
-      pointRadius: 3,
-      borderWidth: 2,
-    };
-  });
-
-  datasets.push({
-    label: '目标70%',
-    data: MONTHS.map(() => 70),
-    borderColor: '#ef4444',
-    borderDash: [5, 4],
-    borderWidth: 1.5,
-    pointRadius: 0,
-    fill: false,
-  });
-
-  mgrTrendChart = new Chart(ctx, {
-    type: 'line',
-    data: { labels: MONTH_LABELS, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 8, font: { size: 9 } } } },
-      scales: {
-        y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { ticks: { font: { size: 9 } }, grid: { display: false } }
-      },
-      interaction: { intersect: false, mode: 'index' },
-    }
-  });
+    const cells = MONTHS.map(m => {
+      const md = d.monthly[m];
+      if (!md || md.t === 0) return '<td class="text-center text-[10px] px-1 py-1 text-[#cbd5e1]">—</td>';
+      const pct = (md.r * 100).toFixed(0);
+      const color = md.r >= 0.7 ? 'text-green-600' : md.r >= 0.5 ? 'text-amber-600' : 'text-red-500';
+      return `<td class="text-center text-[10px] px-1 py-1 font-medium ${color}">${pct}%<br><span class="text-[8px] text-[#94a3b8]">${md.Y}/${md.t}</span></td>`;
+    }).join('');
+    return `<tr>
+      <td class="font-medium text-[11px] px-2 py-1.5">${n}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
 }
 
 // ====================================================================
