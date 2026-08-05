@@ -453,12 +453,56 @@
   <div class="flex items-center justify-between mb-4">
     <div>
       <h2 class="text-lg font-bold">中山销售组 · 总览</h2>
-      <p class="text-xs text-[#6b7a8f]">5名员工 · ${EMP_NAMES.reduce((s,n) => s + EMP_DATA[n].total, 0).toLocaleString()}户会员</p>
+      <p class="text-xs text-[#6b7a8f]" id="mgrSubTitle">5名员工 · 续费管理</p>
     </div>
     <button class="btn btn-sm btn-outline" onclick="showLogin()">← 返回员工入口</button>
   </div>
-  <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4" id="mgrStatCards"></div>
+
+  <!-- 目标达成 -->
+  <div class="card p-4 mb-4">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-semibold text-sm">🎯 8月续费目标达成</h3>
+      <span class="text-xs text-[#6b7a8f]">目标续费率 70%</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">8月待续费</div>
+        <div class="text-xl font-bold text-blue-600" id="mgrAugTotal">--</div>
+      </div>
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">8月已续费</div>
+        <div class="text-xl font-bold text-green-600" id="mgrAugRenewed">--</div>
+      </div>
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">8月续费率</div>
+        <div class="text-xl font-bold" id="mgrAugRate">--</div>
+      </div>
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">还差(户)</div>
+        <div class="text-xl font-bold text-amber-600" id="mgrAugGap">--</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="text-[10px] px-2 py-1.5">员工</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">8月待续</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">8月已续</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">当前续费率</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">目标</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">还差(户)</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">还差金额</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">进度</th>
+          </tr>
+        </thead>
+        <tbody id="mgrAugBody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+    <!-- 员工排名 -->
     <div class="card p-4">
       <h3 class="font-semibold text-sm mb-3">员工续费率排行</h3>
       <select id="mgrRankMetric" class="text-xs mb-3" onchange="renderMgrRank()">
@@ -468,21 +512,48 @@
       </select>
       <canvas id="mgrRankChart" height="200"></canvas>
     </div>
+
+    <!-- 风险预警 -->
     <div class="card p-4">
-      <h3 class="font-semibold text-sm mb-3">月度续费率趋势</h3>
-      <canvas id="mgrTrendChart" height="200"></canvas>
+      <h3 class="font-semibold text-sm mb-3">⚠️ 风险预警</h3>
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <div class="bg-red-50 rounded-lg p-2 text-center">
+          <div class="text-lg font-bold text-red-600" id="mgrRiskOverdue">--</div>
+          <div class="text-[10px] text-[#6b7a8f]">已过期</div>
+        </div>
+        <div class="bg-amber-50 rounded-lg p-2 text-center">
+          <div class="text-lg font-bold text-amber-600" id="mgrRisk7d">--</div>
+          <div class="text-[10px] text-[#6b7a8f]">7天内到期</div>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-2 text-center">
+          <div class="text-lg font-bold text-blue-600" id="mgrRisk30d">--</div>
+          <div class="text-[10px] text-[#6b7a8f]">30天内到期</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-xs font-semibold">待续费 TOP 机构（按户数）</h4>
+        <span class="text-[10px] text-[#6b7a8f]">风险机构</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="text-[10px] px-2 py-1.5">机构</th>
+              <th class="text-[10px] px-2 py-1.5 text-center">待续</th>
+              <th class="text-[10px] px-2 py-1.5 text-center">金额</th>
+              <th class="text-[10px] px-2 py-1.5 text-center">员工</th>
+            </tr>
+          </thead>
+          <tbody id="mgrRiskOrgBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
+
+  <!-- 月度续费率趋势 -->
   <div class="card p-4">
-    <h3 class="font-semibold text-sm mb-3">机构续费一览</h3>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th>机构名称</th><th>产品包</th><th>户数</th><th>到期时间</th><th>预计收入</th><th>已收款</th><th>未收款差额</th></tr>
-        </thead>
-        <tbody id="mgrOrgBody"></tbody>
-      </table>
-    </div>
+    <h3 class="font-semibold text-sm mb-3">月度续费率趋势</h3>
+    <canvas id="mgrTrendChart" height="150"></canvas>
   </div>
 </div>
 
@@ -909,10 +980,13 @@ function publishUpdate() {
 }
 
 function showManagerView() {
+  console.log('showManagerView called');
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('empPage').classList.add('hidden');
   document.getElementById('mgrPage').classList.remove('hidden');
+  console.log('mgrPage shown, calling renderManagerDashboard');
   renderManagerDashboard();
+  console.log('renderManagerDashboard done');
 }
 
 // ====================================================================
@@ -1668,34 +1742,93 @@ function renderAgencyTab() {
 let mgrRankChart = null;
 let mgrTrendChart = null;
 
+// 8月续费目标（来自 26年8-12月续费目标.xlsx / 8月sheet）
+const AUG_TARGETS = {
+  '蔡梦珊': { total: 197, renewed: 86, target: 0.7, gap: 51.9, gapAmount: 32573 },
+  '胡锆宇': { total: 673, renewed: 195, target: 0.7, gap: 276.1, gapAmount: 192780 },
+  '黄剑钦': { total: 383, renewed: 186, target: 0.7, gap: 82.1, gapAmount: 51842 },
+  '项波': { total: 182, renewed: 58, target: 0.7, gap: 69.4, gapAmount: 40334 },
+  '黄丹': { total: 17, renewed: 6, target: 0.7, gap: 5.9, gapAmount: 3970 },
+};
+
 function renderManagerDashboard() {
-  const total = EMP_NAMES.reduce((s, n) => s + EMP_DATA[n].total, 0);
-  const renewed = EMP_NAMES.reduce((s, n) => s + EMP_DATA[n].renewed, 0);
-  const pending = total - renewed;
-  const rate = total > 0 ? (renewed / total) : 0;
-
-  document.getElementById('mgrStatCards').innerHTML = `
-    <div class="card p-2 text-center"><div class="stat-lbl text-[10px]">总户数</div><div class="text-base font-bold text-blue-600">${total.toLocaleString()}</div></div>
-    <div class="card p-2 text-center"><div class="stat-lbl text-[10px]">已续费</div><div class="text-base font-bold text-green-600">${renewed.toLocaleString()}</div></div>
-    <div class="card p-2 text-center"><div class="stat-lbl text-[10px]">待续费</div><div class="text-base font-bold text-amber-600">${pending.toLocaleString()}</div></div>
-    <div class="card p-2 text-center"><div class="stat-lbl text-[10px]">续费率</div><div class="text-base font-bold ${rate >= 0.7 ? 'text-green-600' : rate >= 0.55 ? 'text-amber-600' : 'text-red-500'}">${(rate*100).toFixed(1)}%</div><div class="progress-bar mt-1"><div class="progress-fill" style="width:${rate*100}%;background:#3b82f6"></div></div></div>
-    <div class="card p-2 text-center"><div class="stat-lbl text-[10px]">团队</div><div class="text-base font-bold text-purple-600">${EMP_NAMES.length}人</div></div>
-    <div class="card p-2 text-center"><div class="stat-lbl text-[10px]">总续费金额</div><div class="text-base font-bold text-emerald-600">¥${(renewed * 600).toLocaleString()}</div></div>
-  `;
-
+  renderAugTarget();
+  renderRiskWarning();
   renderMgrRank();
   renderMgrTrend();
+}
 
-  // Org table
-  const tbody = document.getElementById('mgrOrgBody');
-  tbody.innerHTML = ORG_DATA.map(r => `<tr>
-    <td class="font-medium">${r[0]}</td>
-    <td>${r[1] || '—'}</td>
-    <td>${r[2]}${typeof r[2] === 'number' ? '户' : ''}</td>
-    <td>${r[3]}</td>
-    <td>¥${Number(r[4]).toLocaleString()}</td>
-    <td class="text-[#6b7a8f]">—</td>
-    <td class="text-amber-600">¥${Number(r[4]).toLocaleString()}</td>
+// ============ 8月目标达成 ============
+function renderAugTarget() {
+  const tbody = document.getElementById('mgrAugBody');
+  let total = 0, renewed = 0, gap = 0, gapAmount = 0;
+  const rows = EMP_NAMES.map(n => {
+    const t = AUG_TARGETS[n];
+    if (!t) return '';
+    const rate = t.total > 0 ? t.renewed / t.total : 0;
+    const rateColor = rate >= t.target ? 'text-green-600' : rate >= t.target * 0.8 ? 'text-amber-600' : 'text-red-500';
+    const progress = t.total > 0 ? Math.min(100, rate / t.target * 100) : 0;
+    const progressColor = progress >= 100 ? '#16a34a' : progress >= 80 ? '#f59e0b' : '#ef4444';
+    total += t.total; renewed += t.renewed; gap += t.gap; gapAmount += t.gapAmount;
+    return `<tr>
+      <td class="font-medium text-[11px] px-2 py-1.5">${n}</td>
+      <td class="text-center text-[11px] px-2 py-1.5">${t.total}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-green-600">${t.renewed}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 font-bold ${rateColor}">${(rate*100).toFixed(1)}%</td>
+      <td class="text-center text-[11px] px-2 py-1.5">${(t.target*100).toFixed(0)}%</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-amber-600 font-bold">${t.gap.toFixed(1)}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-red-500">¥${t.gapAmount.toLocaleString()}</td>
+      <td class="px-2 py-1.5" style="min-width:80px"><div class="progress-bar"><div class="progress-fill" style="width:${progress.toFixed(0)}%;background:${progressColor}"></div></div></td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
+
+  const overallRate = total > 0 ? renewed / total : 0;
+  document.getElementById('mgrAugTotal').textContent = total;
+  document.getElementById('mgrAugRenewed').textContent = renewed;
+  document.getElementById('mgrAugRate').textContent = (overallRate*100).toFixed(1) + '%';
+  document.getElementById('mgrAugRate').className = 'text-xl font-bold ' + (overallRate >= 0.7 ? 'text-green-600' : overallRate >= 0.56 ? 'text-amber-600' : 'text-red-500');
+  document.getElementById('mgrAugGap').textContent = Math.ceil(gap);
+}
+
+// ============ 风险预警 ============
+function renderRiskWarning() {
+  const now = new Date();
+  let overdue = 0, due7d = 0, due30d = 0, overdueAmt = 0, due7dAmt = 0, due30dAmt = 0;
+  const orgStats = {};  // 按机构聚合待续费
+
+  EMP_NAMES.forEach(n => {
+    const members = getMembersFor(n);
+    members.forEach(m => {
+      if (m.renewed) return;
+      const parts = m.expiry.split('-');
+      const expiryDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      const daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+
+      if (daysLeft < 0) { overdue++; overdueAmt += m.price; }
+      else if (daysLeft <= 7) { due7d++; due7dAmt += m.price; }
+      if (daysLeft <= 30) { due30d++; due30dAmt += m.price; }
+
+      // 机构聚合
+      const key = m.agency || '未知';
+      if (!orgStats[key]) orgStats[key] = { count: 0, amount: 0, emp: n };
+      orgStats[key].count++;
+      orgStats[key].amount += m.price;
+    });
+  });
+
+  document.getElementById('mgrRiskOverdue').textContent = overdue;
+  document.getElementById('mgrRisk7d').textContent = due7d;
+  document.getElementById('mgrRisk30d').textContent = due30d;
+
+  // 待续费 TOP 机构（按户数）
+  const topOrgs = Object.entries(orgStats).sort((a, b) => b[1].count - a[1].count).slice(0, 8);
+  const tbody = document.getElementById('mgrRiskOrgBody');
+  tbody.innerHTML = topOrgs.map(([name, s]) => `<tr>
+    <td class="font-medium text-[11px] px-2 py-1.5" title="${name}">${name.length > 12 ? name.slice(0,12) + '…' : name}</td>
+    <td class="text-center text-[11px] px-2 py-1.5 text-amber-600 font-bold">${s.count}</td>
+    <td class="text-center text-[11px] px-2 py-1.5">¥${s.amount.toLocaleString()}</td>
+    <td class="text-center text-[11px] px-2 py-1.5 text-[#6b7a8f]">${s.emp}</td>
   </tr>`).join('');
 }
 
