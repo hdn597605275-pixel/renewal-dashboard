@@ -149,13 +149,20 @@ def replace_block(c, name, value):
     return c[:start] + f'const {name} = {value}' + c[end:]
 
 
-def update_emp_data(c, counts, monthly):
+def update_emp_data(c, counts, monthly, counts280=None):
     emps = EMPS
     for emp in emps:
         t, r = counts[emp]
         p = t - r
         rate = round(r / t, 4) if t > 0 else 0
         m_str = build_monthly_str(monthly, emp)
+
+        if counts280:
+            t280, r280 = counts280[emp]
+            n280 = t280 - r280
+            rate280 = round(r280 / t280, 4) if t280 > 0 else 0
+        else:
+            t280, r280, n280, rate280 = 0, 0, 0, 0
 
         idx = c.find("'" + emp + "': {")
         if idx < 0:
@@ -173,6 +180,8 @@ def update_emp_data(c, counts, monthly):
         entry = re.sub(r'renewed:\d+', 'renewed:' + str(r), entry)
         entry = re.sub(r'pending:\d+', 'pending:' + str(p), entry)
         entry = re.sub(r'rate:0\.\d+', 'rate:' + str(rate), entry)
+        entry = re.sub(r'r280:\{total:\d+,Y:\d+,N:\d+,rate:0?\}',
+                       f'r280:{{total:{t280},Y:{r280},N:{n280},rate:{rate280}}}', entry)
         ms = entry.find('monthly:{')
         me = entry.find('},r280:')
         if ms > 0 and me > 0:
@@ -215,7 +224,7 @@ def main():
     c = replace_block(c, 'EMP_AGENCIES', json.dumps(emp_agencies, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'AGENCY_280_STATS', json.dumps(agency_280, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'EMP_AGENCIES_280', json.dumps(emp_agencies_280, ensure_ascii=False, separators=(',', ':')))
-    c = update_emp_data(c, counts, monthly)
+    c = update_emp_data(c, counts, monthly, counts280)
 
     with open(HTML, 'w') as f:
         f.write(c)
