@@ -144,8 +144,14 @@ def extract_members(ws, amount_default):
         sorted_members[emp] = pend + renew
 
     sorted_agency = {emp: {a: s for a, s in sorted(agency[emp].items())} for emp in EMPS}
-    sorted_prod = {emp: {str(m): {str(p): prod_monthly[emp][m][p] for p in sorted(prod_monthly[emp][m])}
-                         for m in sorted(prod_monthly[emp])} for emp in EMPS}
+    sorted_prod = {}
+    for emp in EMPS:
+        emp_prod = {}
+        for m in sorted(prod_monthly[emp]):
+            emp_prod[str(m)] = {
+                str(p): (prod_monthly[emp][m].get(str(p)) or [0, 0]) for p in (400, 660, 680, 980)
+            }
+        sorted_prod[emp] = emp_prod
     return sorted_members, counts, monthly, sorted_agency, sorted_prod
 
 
