@@ -61,11 +61,21 @@ def classify_prod(amount):
 
 
 def extract_members(ws, amount_default):
-    """提取会员数据，返回 (members_dict, counts_dict, monthly_dict, agency_stats_dict)"""
+    """提取会员数据，返回 (members_dict, counts_dict, monthly_dict, agency_stats_dict, prod_monthly)"""
     members = {emp: [] for emp in EMPS}
     counts = {emp: [0, 0] for emp in EMPS}
     monthly = {emp: {} for emp in EMPS}
     agency = {emp: {} for emp in EMPS}
+    prod_monthly = {emp: {} for emp in EMPS}
+
+    def price_bucket(amount):
+        if amount <= 400:
+            return 400
+        elif amount <= 660:
+            return 660
+        elif amount <= 680:
+            return 680
+        return 980
 
     for i, row in enumerate(ws.iter_rows(values_only=True)):
         if i == 0:
@@ -103,6 +113,13 @@ def extract_members(ws, amount_default):
             monthly[emp][exp_month][1] += 1
 
         if amount_default == 0:
+            bucket = str(price_bucket(amount))
+            prod_monthly[emp].setdefault(exp_month, {}).setdefault(bucket, [0, 0])
+            prod_monthly[emp][exp_month][bucket][0] += 1
+            if is_renewed:
+                prod_monthly[emp][exp_month][bucket][1] += 1
+
+        if amount_default == 0:
             prod = classify_prod(amount)
             members[emp].append({'n': name, 'c': credit, 'a': agency_name,
                                  'p': prod, 'pr': amount, 'ex': exp_str,
@@ -127,7 +144,9 @@ def extract_members(ws, amount_default):
         sorted_members[emp] = pend + renew
 
     sorted_agency = {emp: {a: s for a, s in sorted(agency[emp].items())} for emp in EMPS}
-    return sorted_members, counts, monthly, sorted_agency
+    sorted_prod = {emp: {str(m): {str(p): prod_monthly[emp][m][p] for p in sorted(prod_monthly[emp][m])}
+                         for m in sorted(prod_monthly[emp])} for emp in EMPS}
+    return sorted_members, counts, monthly, sorted_agency, sorted_prod
 
 
 def build_monthly_str(monthly, emp):
@@ -203,13 +222,13 @@ def main():
 
     # 会员明细
     ws = wb['会员明细']
-    members, counts, monthly, agency = extract_members(ws, 0)
+    members, counts, monthly, agency, prod_monthly = extract_members(ws, 0)
     agency_full = {emp: {a: s for a, s in sorted(agency[emp].items())} for emp in EMPS}
     emp_agencies = {emp: sorted(agency[emp].keys()) for emp in EMPS}
 
     # 280会员明细
     ws280 = wb['280会员明细']
-    members280, counts280, _, agency280 = extract_members(ws280, 280)
+    members280, counts280, _, agency280, _ = extract_members(ws280, 280)
     agency_280 = {emp: {a: s for a, s in sorted(agency280[emp].items())} for emp in EMPS}
     emp_agencies_280 = {emp: sorted(agency280[emp].keys()) for emp in EMPS}
 
@@ -224,6 +243,7 @@ def main():
     c = replace_block(c, 'EMP_AGENCIES', json.dumps(emp_agencies, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'AGENCY_280_STATS', json.dumps(agency_280, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'EMP_AGENCIES_280', json.dumps(emp_agencies_280, ensure_ascii=False, separators=(',', ':')))
+    c = replace_block(c, 'PROD_MONTHLY', json.dumps(prod_monthly, ensure_ascii=False, separators=(',', ':')))
     c = update_emp_data(c, counts, monthly, counts280)
 
     with open(HTML, 'w') as f:
