@@ -253,49 +253,27 @@
     </div>
   </div>
 
-  <!-- 续费总览 -->
+  <!-- 月度产品续费率 -->
   <div class="card p-3 mb-3">
-    <h3 class="font-semibold text-xs mb-2">续费总览</h3>
-    <div class="grid grid-cols-3 gap-2 mb-2">
-      <div class="bg-[#f1f5f9] rounded-lg p-2 text-center">
-        <div class="text-lg font-bold" id="compactRate">--</div>
-        <div class="text-[10px] text-[#6b7a8f]">续费率</div>
-      </div>
-      <div class="bg-[#f1f5f9] rounded-lg p-2 text-center">
-        <div class="text-lg font-bold text-amber-600" id="compactGap">--</div>
-        <div class="text-[10px] text-[#6b7a8f]">还差(户)</div>
-      </div>
-      <div class="bg-[#f1f5f9] rounded-lg p-2 text-center">
-        <div class="text-lg font-bold text-blue-600" id="compactTarget">70%</div>
-        <div class="text-[10px] text-[#6b7a8f]">目标</div>
-      </div>
+    <h3 class="font-semibold text-xs mb-2">月度产品续费率</h3>
+    <div class="table-wrap">
+      <table id="prodRateTable">
+        <thead>
+          <tr>
+            <th class="text-[10px] px-2 py-1.5">月份</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">400</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">660</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">680</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">980</th>
+            <th class="text-[10px] px-2 py-1.5 text-center border-l-2 border-[rgba(0,0,0,0.08)]">合计</th>
+          </tr>
+        </thead>
+        <tbody id="prodRateBody"></tbody>
+      </table>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-      <div>
-        <canvas id="monthlyTargetChart" height="120" class="mb-2"></canvas>
-        <div class="flex flex-wrap gap-1" id="compactMonthly"></div>
-      </div>
-      <div>
-        <div class="table-wrap">
-          <table id="prodRateTable">
-            <thead>
-              <tr>
-                <th class="text-[10px] px-2 py-1.5">月份</th>
-                <th class="text-[10px] px-2 py-1.5 text-center">400</th>
-                <th class="text-[10px] px-2 py-1.5 text-center">660</th>
-                <th class="text-[10px] px-2 py-1.5 text-center">680</th>
-                <th class="text-[10px] px-2 py-1.5 text-center">980</th>
-                <th class="text-[10px] px-2 py-1.5 text-center border-l-2 border-[rgba(0,0,0,0.08)]">合计</th>
-              </tr>
-            </thead>
-            <tbody id="prodRateBody"></tbody>
-          </table>
-        </div>
-        <select id="prodRateMonth" class="text-[10px] border border-[rgba(0,0,0,0.08)] rounded px-1.5 py-1 bg-white outline-none mt-1" onchange="renderProdRateTable()">
-          <option value="all">全部月份</option>
-        </select>
-      </div>
-    </div>
+    <select id="prodRateMonth" class="text-[10px] border border-[rgba(0,0,0,0.08)] rounded px-1.5 py-1 bg-white outline-none mt-1" onchange="renderProdRateTable()">
+      <option value="all">全部月份</option>
+    </select>
   </div>
 
   <!-- 底部：产品分布 + 280续费 -->
@@ -1072,7 +1050,6 @@ function renderLoginCards() {
 // 员工工作台
 // ====================================================================
 let curEmp = null;
-let monthlyChart = null;
 let productChart = null;
 let my280Chart = null;
 
@@ -1091,8 +1068,6 @@ function renderEmployeeDashboard(name) {
   renderEmpStats(name);
   renderMyAgencies();
   renderPendingList();
-  renderMonthlyChart(name);
-  renderCompactMonthly(name);
   renderProdRateTable(name);
   renderMyProductChart(name);
   renderMy280Chart(name);
@@ -1172,10 +1147,6 @@ function renderEmpStats(name) {
   `;
 
   document.getElementById('pendingBadge').textContent = pendingCount;
-  document.getElementById('compactRate').textContent = ratePct + '%';
-  document.getElementById('compactRate').className = 'text-lg font-bold ' + (d.rate >= 0.7 ? 'text-green-600' : d.rate >= 0.55 ? 'text-amber-600' : 'text-red-500');
-  document.getElementById('compactGap').textContent = gapNum <= 0 ? '0' : gapNum;
-  document.getElementById('compactTarget').textContent = Math.round(d.targetRate * 100) + '%';
 }
 
 function renderMyAgencies() {
@@ -1331,88 +1302,6 @@ function handleRenew(idx) {
 // ====================================================================
 // 月度目标图表
 // ====================================================================
-function renderMonthlyChart(name) {
-  const d = EMP_DATA[name];
-  const ctx = document.getElementById('monthlyTargetChart').getContext('2d');
-
-  if (monthlyChart) monthlyChart.destroy();
-
-  const rates = MONTHS.map(m => {
-    const md = d.monthly[m];
-    return md ? +(md.rate * 100).toFixed(1) : null;
-  });
-  const targets = MONTHS.map(() => d.targetRate * 100);
-  const totals = MONTHS.map(m => { const md = d.monthly[m]; return md ? md.total : 0; });
-
-  monthlyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: MONTH_LABELS,
-      datasets: [
-        {
-          label: '续费率',
-          data: rates,
-          backgroundColor: rates.map(r => r !== null && r >= 70 ? '#16a34a' : r !== null && r >= 50 ? '#f59e0b' : '#ef4444'),
-          borderRadius: 3,
-          borderSkipped: false,
-          yAxisID: 'y',
-          order: 2,
-        },
-        {
-          label: '目标 70%',
-          data: targets,
-          type: 'line',
-          borderColor: '#2563eb',
-          borderDash: [5, 4],
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: false,
-          yAxisID: 'y',
-          order: 1,
-        },
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              if (ctx.dataset.label === '续费率') {
-                const total = totals[ctx.dataIndex];
-                const md = d.monthly[MONTHS[ctx.dataIndex]];
-                return `续费率 ${ctx.parsed.y}% (${md ? md.Y : 0}/${total})`;
-              }
-              return ctx.dataset.label + ': ' + ctx.parsed.y + '%';
-            }
-          }
-        }
-      },
-      scales: {
-        y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-        x: { ticks: { font: { size: 9 } }, grid: { display: false } }
-      },
-    }
-  });
-}
-
-function renderCompactMonthly(name) {
-  const d = EMP_DATA[name];
-  const container = document.getElementById('compactMonthly');
-  container.innerHTML = MONTHS.map(m => {
-    const md = d.monthly[m];
-    if (!md || md.total === 0) return '';
-    const pct = (md.rate * 100).toFixed(0);
-    const color = md.rate >= 0.7 ? 'bg-[#dcfce7] text-green-600' : md.rate >= 0.5 ? 'bg-[#fef3c7] text-amber-600' : 'bg-[#fee8e8] text-red-500';
-    const isGood = md.rate >= d.targetRate;
-    return `<span class="${color} text-[10px] px-1.5 py-0.5 rounded-full font-medium inline-flex items-center gap-0.5">
-      ${m}月 ${pct}%${isGood ? ' ✓' : ''}
-    </span>`;
-  }).filter(Boolean).join('');
-}
-
 // ====================================================================
 // 产品分布图表
 // ====================================================================
