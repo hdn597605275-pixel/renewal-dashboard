@@ -50,6 +50,18 @@ def fmt_expiry(expiry):
     return '2026-12-31'
 
 
+def extract_update_date(ws):
+    """从表头(如 '是否续费9.22更新')提取更新日期，返回 '9月22日'；找不到返回 ''"""
+    import re
+    headers = next(ws.iter_rows(values_only=True))
+    for h in headers:
+        if h and '是否续费' in str(h):
+            m = re.search(r'(\d{1,2})[.\-/](\d{1,2})', str(h))
+            if m:
+                return f'{int(m.group(1))}月{int(m.group(2))}日'
+    return ''
+
+
 def classify_prod(amount):
     if amount <= 400:
         return '基础会员-400'
@@ -228,6 +240,7 @@ def main():
 
     # 会员明细
     ws = wb['会员明细']
+    update_date = extract_update_date(ws)
     members, counts, monthly, agency, prod_monthly = extract_members(ws, 0)
     agency_full = {emp: {a: s for a, s in sorted(agency[emp].items())} for emp in EMPS}
     emp_agencies = {emp: sorted(agency[emp].keys()) for emp in EMPS}
@@ -250,6 +263,8 @@ def main():
     c = replace_block(c, 'AGENCY_280_STATS', json.dumps(agency_280, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'EMP_AGENCIES_280', json.dumps(emp_agencies_280, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'PROD_MONTHLY', json.dumps(prod_monthly, ensure_ascii=False, separators=(',', ':')))
+    if update_date:
+        c = replace_block(c, 'DATA_UPDATE_DATE', json.dumps(update_date, ensure_ascii=False))
     c = update_emp_data(c, counts, monthly, counts280)
 
     with open(HTML, 'w') as f:
