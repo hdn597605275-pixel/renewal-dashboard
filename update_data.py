@@ -106,6 +106,7 @@ def extract_members(ws, amount_default):
         is_renewed = str(row[21] or '').strip() == 'Y' if len(row) > 21 else False
         credit = str(row[5] or '').strip()
         is_ts = str(row[15] or '').strip() == '托收' if len(row) > 15 else False
+        accountant = str(row[7] or '').strip() if len(row) > 7 else ''
         exp_str = fmt_expiry(row[12])
         exp_month = 12
         if isinstance(row[12], str):
@@ -135,11 +136,11 @@ def extract_members(ws, amount_default):
             prod = classify_prod(amount)
             members[emp].append({'n': name, 'c': credit, 'a': agency_name,
                                  'p': prod, 'pr': amount, 'ex': exp_str,
-                                 'renewed': is_renewed, 'ts': is_ts})
+                                 'renewed': is_renewed, 'ts': is_ts, 'acc': accountant})
         else:
             members[emp].append({'n': name, 'c': credit, 'a': agency_name,
                                  'ex': exp_str, 'p': amount,
-                                 'renewed': is_renewed, 'ts': is_ts})
+                                 'renewed': is_renewed, 'ts': is_ts, 'acc': accountant})
 
         if agency_name:
             ag = agency[emp].setdefault(agency_name, [0, 0, 0.0])
