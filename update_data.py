@@ -168,6 +168,119 @@ def extract_members(ws, amount_default):
     return sorted_members, counts, monthly, sorted_agency, sorted_prod
 
 
+def extract_r27(ws):
+    """提取 27年1-3月 续费数据
+    返回 (members, counts, monthly, agency, prod_monthly, total_amount)
+    列: 0=代理机构 1=经理 3=受益客户 4=信用代码 7=报税会计 10=sku
+        15=原始到期时间 18=实收金额 19=托收 23=是否续费
+    """
+    members = {emp: [] for emp in EMPS}
+    counts = {emp: [0, 0] for emp in EMPS}
+    monthly = {emp: {} for emp in EMPS}
+    agency = {emp: {} for emp in EMPS}
+    prod_monthly = {emp: {} for emp in EMPS}
+    total_amount = {emp: 0.0 for emp in EMPS}
+
+    def bucket(amount):
+        if amount <= 280:
+            return 280
+        elif amount <= 400:
+            return 400
+        elif amount <= 660:
+            return 660
+        elif amount <= 680:
+            return 680
+        return 980
+
+    prod_names = {280: '电票280', 400: '基础会员-400', 660: '全功能-660',
+                  680: '全功能-680', 980: '全功能-980'}
+
+    for i, row in enumerate(ws.iter_rows(values_only=True)):
+        if i == 0:
+            continue
+        emp = str(row[1] or '').strip()
+        if emp not in EMPS:
+            continue
+        name = str(row[3] or '').strip()
+        if not name:
+            continue
+        agency_name = str(row[0] or '').strip()
+        try:
+            amount = float(row[18]) if row[18] else 0
+        except Exception:
+            amount = 0
+        is_renewed = str(row[23] or '').strip() == 'Y' if len(row) > 23 else False
+        credit = str(row[4] or '').strip() if len(row) > 4 else ''
+        is_ts = str(row[19] or '').strip() == '托收' if len(row) > 19 else False
+        accountant = str(row[7] or '').strip() if len(row) > 7 else ''
+        exp_str = fmt_expiry(row[15])
+        _, exp_month = parse_month(row[15])
+        exp_month = exp_month or 1
+
+        counts[emp][0] += 1
+        if is_renewed:
+            counts[emp][1] += 1
+        total_amount[emp] += amount
+        monthly[emp].setdefault(exp_month, [0, 0])
+        monthly[emp][exp_month][0] += 1
+        if is_renewed:
+            monthly[emp][exp_month][1] += 1
+
+        b = bucket(amount)
+        prod_monthly[emp].setdefault(exp_month, {}).setdefault(b, [0, 0])
+        prod_monthly[emp][exp_month][b][0] += 1
+        if is_renewed:
+            prod_monthly[emp][exp_month][b][1] += 1
+
+        members[emp].append({'n': name, 'c': credit, 'a': agency_name,
+                             'p': prod_names[b], 'pr': amount, 'ex': exp_str,
+                             'renewed': is_renewed, 'ts': is_ts, 'acc': accountant})
+
+        if agency_name:
+            ag = agency[emp].setdefault(agency_name, [0, 0, 0.0])
+            ag[0] += 1
+            if is_renewed:
+                ag[1] += 1
+            ag[2] += amount
+
+    sorted_members = {}
+    for emp in EMPS:
+        pend = [x for x in members[emp] if not x['renewed']]
+        renew = [x for x in members[emp] if x['renewed']]
+        sorted_members[emp] = pend + renew
+
+    sorted_agency = {emp: {a: s for a, s in sorted(agency[emp].items())} for emp in EMPS}
+    sorted_prod = {}
+    for emp in EMPS:
+        emp_prod = {}
+        for m in sorted(prod_monthly[emp]):
+            emp_prod[str(m)] = {
+                str(p): (prod_monthly[emp][m].get(p) or [0, 0]) for p in (280, 400, 660, 680, 980)
+            }
+        sorted_prod[emp] = emp_prod
+    return sorted_members, counts, monthly, sorted_agency, sorted_prod, total_amount
+
+
+def build_emp_data_27(counts, monthly, total_amount):
+    colors = {'蔡梦珊': '#3b82f6', '胡锆宇': '#8b5cf6', '黄剑钦': '#06b6d4',
+              '项波': '#f59e0b', '黄丹': '#10b981'}
+    out = {}
+    for emp in EMPS:
+        t, r = counts[emp]
+        p = t - r
+        rate = round(r / t, 4) if t else 0
+        avg = round(total_amount[emp] / t, 1) if t else 0
+        m_obj = {}
+        for m in sorted(monthly[emp]):
+            v = monthly[emp][m]
+            m_obj[str(m)] = {'t': v[0], 'Y': v[1], 'N': v[0] - v[1],
+                             'r': round(v[1] / v[0], 4) if v[0] else 0}
+        out[emp] = {'total': t, 'renewed': r, 'pending': p, 'rate': rate,
+                    'avgPrice': avg, 'targetRate': 0.15, 'color': colors[emp],
+                    'monthly': m_obj}
+    return out
+
+
 def build_monthly_str(monthly, emp):
     parts = []
     for m in sorted(monthly[emp]):
@@ -252,6 +365,15 @@ def main():
     agency_280 = {emp: {a: s for a, s in sorted(agency280[emp].items())} for emp in EMPS}
     emp_agencies_280 = {emp: sorted(agency280[emp].keys()) for emp in EMPS}
 
+    # 27年1-3月
+    m27 = c27 = mo27 = ag27 = pm27 = tot27 = None
+    if '27年1-3月' in wb.sheetnames:
+        ws27 = wb['27年1-3月']
+        m27, c27, mo27, ag27, pm27, tot27 = extract_r27(ws27)
+        agency_full_27 = {emp: {a: s for a, s in sorted(ag27[emp].items())} for emp in EMPS}
+        emp_agencies_27 = {emp: sorted(ag27[emp].keys()) for emp in EMPS}
+        emp_data_27 = build_emp_data_27(c27, mo27, tot27)
+
     wb.close()
 
     with open(HTML, 'r') as f:
@@ -264,6 +386,12 @@ def main():
     c = replace_block(c, 'AGENCY_280_STATS', json.dumps(agency_280, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'EMP_AGENCIES_280', json.dumps(emp_agencies_280, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'PROD_MONTHLY', json.dumps(prod_monthly, ensure_ascii=False, separators=(',', ':')))
+    if m27 is not None:
+        c = replace_block(c, 'REAL_MEMBERS_27', json.dumps(m27, ensure_ascii=False, separators=(',', ':')))
+        c = replace_block(c, 'AGENCY_FULL_STATS_27', json.dumps(agency_full_27, ensure_ascii=False, separators=(',', ':')))
+        c = replace_block(c, 'EMP_AGENCIES_27', json.dumps(emp_agencies_27, ensure_ascii=False, separators=(',', ':')))
+        c = replace_block(c, 'EMP_DATA_27', json.dumps(emp_data_27, ensure_ascii=False, separators=(',', ':')))
+        c = replace_block(c, 'PROD_MONTHLY_27', json.dumps(pm27, ensure_ascii=False, separators=(',', ':')))
     if update_date:
         c = replace_block(c, 'DATA_UPDATE_DATE', json.dumps(update_date, ensure_ascii=False))
     c = update_emp_data(c, counts, monthly, counts280)
