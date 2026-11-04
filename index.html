@@ -537,20 +537,20 @@
   <!-- 目标达成 -->
   <div class="card p-4 mb-4">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="font-semibold text-sm">🎯 8月续费目标达成</h3>
+      <h3 class="font-semibold text-sm">🎯 26年会员续费目标达成</h3>
       <span class="text-xs text-[#6b7a8f]">目标续费率 70%</span>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3">
       <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
-        <div class="text-[10px] text-[#6b7a8f]">8月待续费</div>
+        <div class="text-[10px] text-[#6b7a8f]">总户数</div>
         <div class="text-xl font-bold text-blue-600" id="mgrAugTotal">--</div>
       </div>
       <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
-        <div class="text-[10px] text-[#6b7a8f]">8月已续费</div>
+        <div class="text-[10px] text-[#6b7a8f]">已续费</div>
         <div class="text-xl font-bold text-green-600" id="mgrAugRenewed">--</div>
       </div>
       <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
-        <div class="text-[10px] text-[#6b7a8f]">8月续费率</div>
+        <div class="text-[10px] text-[#6b7a8f]">续费率</div>
         <div class="text-xl font-bold" id="mgrAugRate">--</div>
       </div>
       <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
@@ -567,8 +567,8 @@
         <thead>
           <tr>
             <th class="text-[10px] px-2 py-1.5">员工</th>
-            <th class="text-[10px] px-2 py-1.5 text-center">8月待续</th>
-            <th class="text-[10px] px-2 py-1.5 text-center">8月已续</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">总户数</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">已续费</th>
             <th class="text-[10px] px-2 py-1.5 text-center">当前续费率</th>
             <th class="text-[10px] px-2 py-1.5 text-center">目标</th>
             <th class="text-[10px] px-2 py-1.5 text-center">还差(户)</th>
@@ -581,15 +581,68 @@
     </div>
   </div>
 
+  <!-- 27年目标达成 -->
+  <div class="card p-4 mb-4" style="border-left:3px solid #8b5cf6">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-semibold text-sm">📅 27年1-3月续费目标达成</h3>
+      <span class="text-xs text-[#6b7a8f]">目标续费率 15%</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3">
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">总户数</div>
+        <div class="text-xl font-bold text-blue-600" id="mgr27Total">--</div>
+      </div>
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">已续费</div>
+        <div class="text-xl font-bold text-green-600" id="mgr27Renewed">--</div>
+      </div>
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">续费率</div>
+        <div class="text-xl font-bold" id="mgr27Rate">--</div>
+      </div>
+      <div class="bg-[#f1f5f9] rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">还差(户)</div>
+        <div class="text-xl font-bold text-amber-600" id="mgr27Gap">--</div>
+      </div>
+      <div class="bg-red-50 rounded-lg p-3 text-center">
+        <div class="text-[10px] text-[#6b7a8f]">💰 还差金额</div>
+        <div class="text-xl font-bold text-red-600" id="mgr27GapAmount">--</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="text-[10px] px-2 py-1.5">员工</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">总户数</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">已续费</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">当前续费率</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">目标</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">还差(户)</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">还差金额</th>
+            <th class="text-[10px] px-2 py-1.5 text-center">进度</th>
+          </tr>
+        </thead>
+        <tbody id="mgr27Body"></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
     <!-- 员工排名 -->
     <div class="card p-4">
       <h3 class="font-semibold text-sm mb-3">员工续费率排行</h3>
-      <select id="mgrRankMetric" class="text-xs mb-3" onchange="renderMgrRank()">
-        <option value="rate">按续费率</option>
-        <option value="renewed">按续费数</option>
-        <option value="pending">按待续费</option>
-      </select>
+      <div class="flex items-center gap-2 mb-3">
+        <select id="mgrRankYear" class="text-xs" onchange="renderMgrRank()">
+          <option value="26">26年会员</option>
+          <option value="27">27年1-3月</option>
+        </select>
+        <select id="mgrRankMetric" class="text-xs" onchange="renderMgrRank()">
+          <option value="rate">按续费率</option>
+          <option value="renewed">按续费数</option>
+          <option value="pending">按待续费</option>
+        </select>
+      </div>
       <div id="mgrRankList" class="space-y-2"></div>
     </div>
 
@@ -2001,18 +2054,10 @@ function renderAgencyTab() {
 let mgrRankChart = null;
 let mgrTrendChart = null;
 
-// 8月续费目标（来自 26年8-12月续费目标.xlsx / 8月sheet）
-const AUG_TARGETS = {
-  '蔡梦珊': { total: 197, renewed: 86, target: 0.7, gap: 51.9, gapAmount: 32573 },
-  '胡锆宇': { total: 673, renewed: 195, target: 0.7, gap: 276.1, gapAmount: 192780 },
-  '黄剑钦': { total: 383, renewed: 186, target: 0.7, gap: 82.1, gapAmount: 51842 },
-  '项波': { total: 182, renewed: 58, target: 0.7, gap: 69.4, gapAmount: 40334 },
-  '黄丹': { total: 17, renewed: 6, target: 0.7, gap: 5.9, gapAmount: 3970 },
-};
-
 function renderManagerDashboard() {
   try {
     renderAugTarget();
+    renderMgr27Target();
     renderRiskWarning();
     renderPressure();
     renderMgrRank();
@@ -2023,26 +2068,30 @@ function renderManagerDashboard() {
   }
 }
 
-// ============ 8月目标达成 ============
+// ============ 26年目标达成 ============
 function renderAugTarget() {
   const tbody = document.getElementById('mgrAugBody');
   let total = 0, renewed = 0, gap = 0, gapAmount = 0;
   const rows = EMP_NAMES.map(n => {
-    const t = AUG_TARGETS[n];
-    if (!t) return '';
-    const rate = t.total > 0 ? t.renewed / t.total : 0;
-    const rateColor = rate >= t.target ? 'text-green-600' : rate >= t.target * 0.8 ? 'text-amber-600' : 'text-red-500';
-    const progress = t.total > 0 ? Math.min(100, rate / t.target * 100) : 0;
+    const d = EMP_DATA[n];
+    const t = d.total, r = d.renewed;
+    const target = d.targetRate || 0.7;
+    const avgP = d.avgPrice || 600;
+    const rate = t > 0 ? r / t : 0;
+    const gapNum = Math.max(0, t * target - r);
+    const gapAmt = Math.round(gapNum * avgP);
+    const rateColor = rate >= target ? 'text-green-600' : rate >= target * 0.8 ? 'text-amber-600' : 'text-red-500';
+    const progress = t > 0 ? Math.min(100, rate / target * 100) : 0;
     const progressColor = progress >= 100 ? '#16a34a' : progress >= 80 ? '#f59e0b' : '#ef4444';
-    total += t.total; renewed += t.renewed; gap += t.gap; gapAmount += t.gapAmount;
+    total += t; renewed += r; gap += gapNum; gapAmount += gapAmt;
     return `<tr>
       <td class="font-medium text-[11px] px-2 py-1.5">${n}</td>
-      <td class="text-center text-[11px] px-2 py-1.5">${t.total}</td>
-      <td class="text-center text-[11px] px-2 py-1.5 text-green-600">${t.renewed}</td>
+      <td class="text-center text-[11px] px-2 py-1.5">${t}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-green-600">${r}</td>
       <td class="text-center text-[11px] px-2 py-1.5 font-bold ${rateColor}">${(rate*100).toFixed(1)}%</td>
-      <td class="text-center text-[11px] px-2 py-1.5">${(t.target*100).toFixed(0)}%</td>
-      <td class="text-center text-[11px] px-2 py-1.5 text-amber-600 font-bold">${t.gap.toFixed(1)}</td>
-      <td class="text-center text-[11px] px-2 py-1.5 text-red-500">¥${t.gapAmount.toLocaleString()}</td>
+      <td class="text-center text-[11px] px-2 py-1.5">${(target*100).toFixed(0)}%</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-amber-600 font-bold">${Math.ceil(gapNum)}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-red-500">¥${gapAmt.toLocaleString()}</td>
       <td class="px-2 py-1.5" style="min-width:80px"><div class="progress-bar"><div class="progress-fill" style="width:${progress.toFixed(0)}%;background:${progressColor}"></div></div></td>
     </tr>`;
   }).join('');
@@ -2055,6 +2104,46 @@ function renderAugTarget() {
   document.getElementById('mgrAugRate').className = 'text-xl font-bold ' + (overallRate >= 0.7 ? 'text-green-600' : overallRate >= 0.56 ? 'text-amber-600' : 'text-red-500');
   document.getElementById('mgrAugGap').textContent = Math.ceil(gap);
   document.getElementById('mgrAugGapAmount').textContent = '¥' + gapAmount.toLocaleString();
+}
+
+// ============ 27年目标达成 ============
+function renderMgr27Target() {
+  const tbody = document.getElementById('mgr27Body');
+  if (!tbody) return;
+  let total = 0, renewed = 0, gap = 0, gapAmount = 0;
+  const rows = EMP_NAMES.map(n => {
+    const d = EMP_DATA_27[n];
+    if (!d) return '';
+    const t = d.total, r = d.renewed;
+    const target = d.targetRate || 0.15;
+    const avgP = d.avgPrice || 600;
+    const rate = t > 0 ? r / t : 0;
+    const gapNum = Math.max(0, t * target - r);
+    const gapAmt = Math.round(gapNum * avgP);
+    const rateColor = rate >= target ? 'text-green-600' : rate >= target * 0.5 ? 'text-amber-600' : 'text-red-500';
+    const progress = t > 0 ? Math.min(100, rate / target * 100) : 0;
+    const progressColor = progress >= 100 ? '#16a34a' : progress >= 80 ? '#f59e0b' : '#ef4444';
+    total += t; renewed += r; gap += gapNum; gapAmount += gapAmt;
+    return `<tr>
+      <td class="font-medium text-[11px] px-2 py-1.5">${n}</td>
+      <td class="text-center text-[11px] px-2 py-1.5">${t}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-green-600">${r}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 font-bold ${rateColor}">${(rate*100).toFixed(1)}%</td>
+      <td class="text-center text-[11px] px-2 py-1.5">${(target*100).toFixed(0)}%</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-amber-600 font-bold">${Math.ceil(gapNum)}</td>
+      <td class="text-center text-[11px] px-2 py-1.5 text-red-500">¥${gapAmt.toLocaleString()}</td>
+      <td class="px-2 py-1.5" style="min-width:80px"><div class="progress-bar"><div class="progress-fill" style="width:${progress.toFixed(0)}%;background:${progressColor}"></div></div></td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
+
+  const overallRate = total > 0 ? renewed / total : 0;
+  document.getElementById('mgr27Total').textContent = total;
+  document.getElementById('mgr27Renewed').textContent = renewed;
+  document.getElementById('mgr27Rate').textContent = (overallRate*100).toFixed(1) + '%';
+  document.getElementById('mgr27Rate').className = 'text-xl font-bold ' + (overallRate >= 0.15 ? 'text-green-600' : overallRate >= 0.08 ? 'text-amber-600' : 'text-red-500');
+  document.getElementById('mgr27Gap').textContent = Math.ceil(gap);
+  document.getElementById('mgr27GapAmount').textContent = '¥' + gapAmount.toLocaleString();
 }
 
 // ============ 风险预警 ============
@@ -2153,9 +2242,13 @@ function renderPressure() {
 }
 
 function renderMgrRank() {
+  const yearEl = document.getElementById('mgrRankYear');
+  const year = yearEl ? yearEl.value : '26';
   const metric = document.getElementById('mgrRankMetric').value;
+  const dataSrc = year === '27' ? EMP_DATA_27 : EMP_DATA;
+  const target = year === '27' ? 0.15 : 0.7;
 
-  let items = EMP_NAMES.map(n => ({ name: n, ...EMP_DATA[n] }));
+  let items = EMP_NAMES.map(n => ({ name: n, ...dataSrc[n] }));
   if (metric === 'rate') items.sort((a, b) => b.rate - a.rate);
   else if (metric === 'renewed') items.sort((a, b) => b.renewed - a.renewed);
   else items.sort((a, b) => b.pending - a.pending);
@@ -2164,13 +2257,14 @@ function renderMgrRank() {
   const rankIcons = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
   container.innerHTML = items.map((i, idx) => {
     const pct = (i.rate * 100).toFixed(1);
-    const rateColor = i.rate >= 0.7 ? 'text-green-600' : i.rate >= 0.5 ? 'text-amber-600' : 'text-red-500';
-    const barColor = i.rate >= 0.7 ? '#16a34a' : i.rate >= 0.5 ? '#f59e0b' : '#ef4444';
+    const rateColor = i.rate >= target ? 'text-green-600' : i.rate >= target * 0.5 ? 'text-amber-600' : 'text-red-500';
+    const barColor = i.rate >= target ? '#16a34a' : i.rate >= target * 0.5 ? '#f59e0b' : '#ef4444';
     const sub = metric === 'rate'
       ? `${i.renewed}/${i.total} 已续 · 待续 ${i.pending}`
       : metric === 'renewed'
         ? `续费率 ${pct}% · 待续 ${i.pending}`
         : `续费率 ${pct}% · 已续 ${i.renewed}`;
+    const barPct = Math.min(100, (i.rate / target) * 100);
     return `<div class="bg-[#f8fafc] rounded-lg p-2.5 border border-[#e8edf2]">
       <div class="flex items-center justify-between mb-1">
         <div class="flex items-center gap-2">
@@ -2180,7 +2274,7 @@ function renderMgrRank() {
         <span class="text-sm font-bold ${rateColor}">${metric === 'rate' ? pct + '%' : i[metric]}</span>
       </div>
       <div class="flex items-center gap-2">
-        <div class="progress-bar flex-1"><div class="progress-fill" style="width:${Math.min(i.rate*100,100)}%;background:${barColor}"></div></div>
+        <div class="progress-bar flex-1"><div class="progress-fill" style="width:${barPct}%;background:${barColor}"></div></div>
         <span class="text-[10px] text-[#6b7a8f] whitespace-nowrap">${sub}</span>
       </div>
     </div>`;
