@@ -531,7 +531,11 @@
       <h2 class="text-lg font-bold">中山销售组 · 总览</h2>
       <p class="text-xs text-[#6b7a8f]" id="mgrSubTitle">5名员工 · 续费管理</p>
     </div>
-    <button class="btn btn-sm btn-outline" onclick="showLogin()">← 返回员工入口</button>
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="text-[11px] text-[#6b7a8f]">📅 数据更新于 <span id="mgrUpdateDate">--</span></span>
+      <button class="btn btn-sm text-[11px] px-3 py-1.5 bg-blue-500 text-white rounded font-medium hover:bg-blue-600" onclick="refreshManagerData()">🔄 刷新数据</button>
+      <button class="btn btn-sm btn-outline" onclick="showLogin()">← 返回员工入口</button>
+    </div>
   </div>
 
   <!-- 目标达成 -->
@@ -1443,13 +1447,17 @@ function publishUpdate() {
 }
 
 function showManagerView() {
-  console.log('showManagerView called');
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('empPage').classList.add('hidden');
   document.getElementById('mgrPage').classList.remove('hidden');
-  console.log('mgrPage shown, calling renderManagerDashboard');
   renderManagerDashboard();
-  console.log('renderManagerDashboard done');
+}
+
+// 刷新数据：绕过缓存重新拉取最新页面，并自动回到总览
+function refreshManagerData() {
+  try { sessionStorage.setItem('_return_mgr', '1'); } catch (e) {}
+  const base = location.href.split('?')[0].split('#')[0];
+  location.replace(base + '?t=' + Date.now());
 }
 
 // ====================================================================
@@ -2056,6 +2064,8 @@ let mgrTrendChart = null;
 
 function renderManagerDashboard() {
   try {
+    const dateEl = document.getElementById('mgrUpdateDate');
+    if (dateEl) dateEl.textContent = DATA_UPDATE_DATE;
     renderAugTarget();
     renderMgr27Target();
     renderRiskWarning();
@@ -2364,6 +2374,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const dateEl = document.getElementById('dataUpdateDate');
   if (dateEl) dateEl.textContent = DATA_UPDATE_DATE;
   renderLoginCards();
+
+  // 刷新数据后自动回到管理者总览
+  try {
+    if (sessionStorage.getItem('_return_mgr') === '1') {
+      sessionStorage.removeItem('_return_mgr');
+      showManagerView();
+    }
+  } catch (e) {}
 });
 
 function handleFile(file) {
