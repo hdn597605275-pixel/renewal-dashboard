@@ -290,6 +290,82 @@ def build_monthly_str(monthly, emp):
     return ','.join(parts)
 
 
+def parse_old_emp_data(c):
+    """从旧 index.html 解析 EMP_DATA 每人 total/renewed/rate"""
+    out = {}
+    for emp in EMPS:
+        m = re.search(r"'" + re.escape(emp) + r"': \{total:(\d+),renewed:(\d+),pending:(\d+),rate:([\d.]+)", c)
+        if m:
+            out[emp] = {'total': int(m.group(1)), 'renewed': int(m.group(2)),
+                        'pending': int(m.group(3)), 'rate': float(m.group(4))}
+    return out
+
+
+def parse_old_emp_data_27(c):
+    start = c.find('const EMP_DATA_27 = ')
+    if start < 0:
+        return {}
+    end = c.find(';', start)
+    try:
+        d = json.loads(c[start + len('const EMP_DATA_27 = '):end])
+    except Exception:
+        return {}
+    out = {}
+    for emp, v in d.items():
+        out[emp] = {'total': v.get('total', 0), 'renewed': v.get('renewed', 0),
+                    'rate': v.get('rate', 0)}
+    return out
+
+
+def parse_old_value(c, name, default=''):
+    m = re.search(r'const ' + re.escape(name) + r' = "([^"]*)"', c)
+    return m.group(1) if m else default
+
+
+def parse_old_delta(c):
+    start = c.find('const DATA_DELTA = ')
+    if start < 0:
+        return None
+    end = c.find(';', start)
+    try:
+        return json.loads(c[start + len('const DATA_DELTA = '):end])
+    except Exception:
+        return None
+
+
+def build_delta(old_26, old_27, counts, counts27, prev_date):
+    """计算各员工相对上次的变化"""
+    e26 = {}
+    for emp in EMPS:
+        t, r = counts[emp]
+        old = old_26.get(emp, {})
+        ot = old.get('total', t)
+        orn = old.get('renewed', r)
+        orate = old.get('rate', (orn / ot if ot else 0))
+        nrate = (r / t) if t else 0
+        e26[emp] = {'total': t - ot, 'renewed': r - orn,
+                    'rate': round(nrate - orate, 4)}
+    e27 = {}
+    for emp in EMPS:
+        t, r = counts27[emp] if counts27 else (0, 0)
+        old = old_27.get(emp, {})
+        ot = old.get('total', t)
+        orn = old.get('renewed', r)
+        orate = old.get('rate', (orn / ot if ot else 0))
+        nrate = (r / t) if t else 0
+        e27[emp] = {'total': t - ot, 'renewed': r - orn,
+                    'rate': round(nrate - orate, 4)}
+    return {'prevDate': prev_date, 'e26': e26, 'e27': e27}
+
+
+def has_change(delta):
+    for key in ('e26', 'e27'):
+        for v in delta.get(key, {}).values():
+            if v.get('renewed', 0) or v.get('total', 0):
+                return True
+    return False
+
+
 def replace_block(c, name, value):
     start = c.find('const ' + name + ' = ')
     if start < 0:
@@ -378,6 +454,18 @@ def main():
 
     with open(HTML, 'r') as f:
         c = f.read()
+
+    # 计算相对上次更新的变化（需在替换数据前解析旧值）
+    old_26 = parse_old_emp_data(c)
+    old_27 = parse_old_emp_data_27(c)
+    old_delta = parse_old_delta(c)
+    prev_date = parse_old_value(c, 'DATA_UPDATE_DATE', '')
+    new_delta = build_delta(old_26, old_27, counts, c27, prev_date)
+    if old_delta is not None and old_delta.get('prevDate') and not has_change(new_delta):
+        # 数据没变化时保留上次的变化记录
+        pass
+    else:
+        c = replace_block(c, 'DATA_DELTA', json.dumps(new_delta, ensure_ascii=False, separators=(',', ':')))
 
     c = replace_block(c, 'REAL_MEMBERS', json.dumps(members, ensure_ascii=False, separators=(',', ':')))
     c = replace_block(c, 'REAL_MEMBERS_280', json.dumps(members280, ensure_ascii=False, separators=(',', ':')))
